@@ -1,0 +1,107 @@
+﻿@page "/"
+
+<PageTitle>CSV User Upload System</PageTitle>
+
+<div class="container mt-2">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-3">
+                <h1 class="display-4 fw-bold text-primary">CSV User Upload System</h1>
+                <p class="lead text-muted">Upload and validate user data from CSV files with real-time validation</p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-upload text-primary" viewBox="0 0 16 16">
+                                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5" />
+                                    <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708z" />
+                                </svg>
+                            </div>
+                            <h5 class="card-title">Upload CSV</h5>
+                            <p class="card-text">Upload CSV files containing user data for validation and import</p>
+                            <a href="/csv-upload" class="btn btn-primary">Start Upload</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-people text-success" viewBox="0 0 16 16">
+                                    <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1zm-7.978-1L7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002-.014.002zM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0M6.936 9.28a6 6 0 0 0-1.23-.247A7 7 0 0 0 5 9c-4 0-5 3-5 4q0 1 1 1h4.216A2.24 2.24 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816M4.92 10A5.5 5.5 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0m3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4" />
+                                </svg>
+                            </div>
+                            <h5 class="card-title">View Users</h5>
+                            <p class="card-text">Browse all successfully imported and validated users</p>
+                            <a href="/users" class="btn btn-success">View Users</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">How it Works</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="mb-2">
+                                <span class="badge bg-primary rounded-pill fs-6">1</span>
+                            </div>
+                            <h6>Upload CSV</h6>
+                            <p class="small text-muted">Select and upload your CSV file containing user data</p>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="mb-2">
+                                <span class="badge bg-warning rounded-pill fs-6">2</span>
+                            </div>
+                            <h6>Validate Data</h6>
+                            <p class="small text-muted">System validates each field and highlights any errors</p>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="mb-2">
+                                <span class="badge bg-success rounded-pill fs-6">3</span>
+                            </div>
+                            <h6>Save to Database</h6>
+                            <p class="small text-muted">Valid records are saved to the database automatically (After pressing save button)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-2">
+                <div class="card-header">
+                    <h5 class="mb-0">Validation Rules</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Required Fields</h6>
+                            <ul class="list-unstyled small">
+                                <li><strong>Full Name:</strong> Maximum 100 characters</li>
+                                <li><strong>Username:</strong> Maximum 100 characters, unique</li>
+                                <li><strong>Email:</strong> Valid email format, unique</li>
+                                <li><strong>Password:</strong> Complex password required</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Password Requirements</h6>
+                            <ul class="list-unstyled small">
+                                <li>• Minimum 8 characters</li>
+                                <li>• At least one uppercase letter</li>
+                                <li>• At least one lowercase letter</li>
+                                <li>• At least one digit</li>
+                                <li>• At least one special character</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

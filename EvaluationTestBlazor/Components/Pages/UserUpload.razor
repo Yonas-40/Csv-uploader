@@ -1,0 +1,281 @@
+﻿@page "/csv-upload"
+@rendermode InteractiveServer
+@using EvaluationTesst.Models
+@using EvaluationTestBlazor.Services
+@using EvaluationTesst.Services
+@inject ICsvService CsvService
+@inject IUserService UserService
+@inject IJSRuntime JSRuntime
+@inject ILogger<CsvUser> Logger
+
+<PageTitle>CSV User Upload</PageTitle>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2>CSV User Upload</h2>
+            <p class="text-muted">Upload a CSV file containing user data. Required fields: Full Name, Username, Email, Password</p>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger" role="alert">
+                    @errorMessage
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="alert alert-success" role="alert">
+                    @successMessage
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(debugInfo))
+            {
+                <div class="alert alert-info" role="alert">
+                    <strong>Debug Info:</strong><br />
+                    <pre style="font-size: 0.8em; white-space: pre-wrap;">@debugInfo</pre>
+                </div>
+            }
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="csvFile" class="form-label">Select CSV File</label>
+                        <InputFile id="csvFile" class="form-control" OnChange="HandleFileUpload" accept=".csv" />
+                        <div class="form-text">Accepted format: CSV files (.csv)</div>
+                    </div>
+
+                    @if (isLoading)
+                    {
+                        <div class="d-flex justify-content-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @if (importedUsers.Any())
+            {
+                <div class="card mt-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            Imported Users
+                            <span class="badge bg-secondary">@importedUsers.Count total</span>
+                            <span class="badge bg-success">@importedUsers.Count(u => u.IsValid) valid</span>
+                            <span class="badge bg-danger">@importedUsers.Count(u => !u.IsValid) invalid</span>
+                        </h5>
+
+                        @if (importedUsers.Any(u => u.IsValid))
+                        {
+                            <button class="btn btn-primary" @onclick="SaveUsers" disabled="@isSaving">
+                                @if (isSaving)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                }
+                                Save Valid Users
+                            </button>
+                        }
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Row</th>
+                                        <th>Full Name</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Password</th>
+                                        <th>Status</th>
+                                        <th>Validation Errors</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var user in importedUsers)
+                                    {
+                                        <tr class="@(user.IsValid ? "" : "table-danger")">
+                                            <td>@user.RowNumber</td>
+                                            <td class="@(HasFieldError(user, "Full name") ? "text-danger fw-bold" : "")">
+                                                @user.FullName
+                                            </td>
+                                            <td class="@(HasFieldError(user, "Username") ? "text-danger fw-bold" : "")">
+                                                @user.Username
+                                            </td>
+                                            <td class="@(HasFieldError(user, "Email") ? "text-danger fw-bold" : "")">
+                                                @user.Email
+                                            </td>
+                                            <td class="@(HasFieldError(user, "Password") ? "text-danger fw-bold" : "")">
+                                                @(string.IsNullOrEmpty(user.Password) ? "" : new string('*', Math.Min(user.Password.Length, 8)))
+                                            </td>
+                                            <td>
+                                                @if (user.IsValid)
+                                                {
+                                                    <span class="badge bg-success">Valid</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger">Invalid</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (user.ValidationErrors.Any())
+                                                {
+                                                    <ul class="list-unstyled mb-0 small text-danger">
+                                                        @foreach (var error in user.ValidationErrors)
+                                                        {
+                                                            <li>• @error</li>
+                                                        }
+                                                    </ul>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<CsvUser> importedUsers = new();
+    private bool isLoading = false;
+    private bool isSaving = false;
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private string debugInfo = string.Empty;
+
+    private async Task HandleFileUpload(InputFileChangeEventArgs e)
+    {
+        ClearMessages();
+
+        var file = e.File;
+        if (file == null)
+        {
+            StateHasChanged();
+            return;
+        }
+
+        StateHasChanged();
+
+        // Validate file type
+        if (!file.Name.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+        {
+            errorMessage = "Please select a valid CSV file.";
+            StateHasChanged();
+            return;
+        }
+
+        // Validate file size (5MB limit)
+        if (file.Size > 5 * 1024 * 1024)
+        {
+            errorMessage = "File size must be less than 5MB.";
+            StateHasChanged();
+            return;
+        }
+
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            StateHasChanged();
+
+            using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+
+            StateHasChanged();
+
+            importedUsers = await CsvService.ParseCsvAsync(stream);
+
+            StateHasChanged();
+
+            if (importedUsers == null)
+            {
+                errorMessage = "CSV service returned null result.";
+                importedUsers = new List<CsvUser>();
+                StateHasChanged();
+                return;
+            }
+
+
+            if (importedUsers.Any(u => u.RowNumber == 0))
+            {
+                var parseError = importedUsers.FirstOrDefault(u => u.RowNumber == 0);
+                if (parseError != null)
+                {
+                    errorMessage = string.Join(", ", parseError.ValidationErrors);
+                    importedUsers.Clear();
+                }
+            }
+            else if (!importedUsers.Any())
+            {
+                errorMessage = "No users found in the CSV file.";
+            }
+            else
+            {
+                successMessage = $"Successfully parsed {importedUsers.Count} rows from CSV file.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error processing file: {ex.Message}";
+            importedUsers.Clear();
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SaveUsers()
+    {
+        ClearMessages();
+
+        var validUsers = importedUsers.Where(u => u.IsValid).ToList();
+        if (!validUsers.Any())
+        {
+            errorMessage = "No valid users to save.";
+            return;
+        }
+
+        isSaving = true;
+        StateHasChanged();
+
+        try
+        {
+            var savedCount = await UserService.SaveUsersAsync(validUsers);
+            successMessage = $"Successfully saved {savedCount} users to the database.";
+
+            // Clear the imported users after successful save
+            importedUsers.Clear();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error saving users: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private bool HasFieldError(CsvUser user, string fieldName)
+    {
+        return user.ValidationErrors.Any(e => e.Contains(fieldName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void ClearMessages()
+    {
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+        debugInfo = string.Empty;
+    }
+}

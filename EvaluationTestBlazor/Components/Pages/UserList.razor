@@ -1,0 +1,94 @@
+﻿@page "/users"
+@inject IUserService UserService
+
+<PageTitle>Users List</PageTitle>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2>Saved Users</h2>
+            <p class="text-muted">List of all users saved to the database</p>
+
+            @if (isLoading)
+            {
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            }
+            else if (users.Any())
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            Total Users: <span class="badge bg-primary">@users.Count</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Full Name</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Password</th>
+                                        <th>Created At</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var user in users)
+                                    {
+                                        <tr>
+                                            <td>@user.Id</td>
+                                            <td>@user.FullName</td>
+                                            <td>@user.Username</td>
+                                            <td>@user.Email</td>
+                                            <td>@(string.IsNullOrEmpty(user.Password) ? "" : new string('*', Math.Min(user.Password.Length, 8)))</td>
+                                            <td>@user.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info" role="alert">
+                    No users found in the database. <a href="/csv-upload" class="alert-link">Upload some users</a> to get started.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<User> users = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        try
+        {
+            users = await UserService.GetAllUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            // Log error in real application
+            users = new List<User>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
